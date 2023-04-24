@@ -85,6 +85,7 @@ const getOptionalInput = (name: string) => core.getInput(name) || undefined;
         script: publishScript,
         githubToken,
         createGithubReleases: core.getBooleanInput("createGithubReleases"),
+        githubReleaseAssets: core.getMultilineInput("githubReleaseAssets"),
       });
 
       if (result.published) {

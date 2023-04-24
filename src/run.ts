@@ -24,7 +24,7 @@ const MAX_CHARACTERS_PER_MESSAGE = 60000;
 
 const createRelease = async (
   octokit: ReturnType<typeof github.getOctokit>,
-  { pkg, tagName }: { pkg: Package; tagName: string }
+  { pkg, tagName, assets }: { pkg: Package; tagName: string; assets: string[] }
 ) => {
   try {
     let changelogFileName = path.join(pkg.dir, "CHANGELOG.md");
@@ -40,13 +40,30 @@ const createRelease = async (
       );
     }
 
-    await octokit.repos.createRelease({
+    const release = await octokit.repos.createRelease({
       name: tagName,
       tag_name: tagName,
       body: changelogEntry.content,
       prerelease: pkg.packageJson.version.includes("-"),
       ...github.context.repo,
     });
+
+    for (const asset of assets) {
+      const exists = await fs.pathExists(asset);
+      if (!exists) {
+        // the release is already created so we dont want to throw (or do we?)
+        console.warn(`Asset at path ${asset} does not exist. Skipping...`);
+        continue;
+      }
+      const file = await fs.readFile(asset);
+      await octokit.repos.uploadReleaseAsset({
+        release_id: release.data.id,
+        name: path.basename(asset),
+        // TODO: stringifying the buffer of big files will consume a lot of memory - problem?
+        data: file.toString(),
+        ...github.context.repo,
+      });
+    }
   } catch (err: any) {
     // if we can't find a changelog, the user has probably disabled changelogs
     if (err.code !== "ENOENT") {
@@ -59,6 +76,7 @@ type PublishOptions = {
   script: string;
   githubToken: string;
   createGithubReleases: boolean;
+  githubReleaseAssets: string[];
   cwd?: string;
 };
 
@@ -77,6 +95,7 @@ export async function runPublish({
   script,
   githubToken,
   createGithubReleases,
+  githubReleaseAssets,
   cwd = process.cwd(),
 }: PublishOptions): Promise<PublishResult> {
   let octokit = github.getOctokit(githubToken);
@@ -119,6 +138,7 @@ export async function runPublish({
           createRelease(octokit, {
             pkg,
             tagName: `${pkg.packageJson.name}@${pkg.packageJson.version}`,
+            assets: githubReleaseAssets,
           })
         )
       );
@@ -142,6 +162,7 @@ export async function runPublish({
           await createRelease(octokit, {
             pkg,
             tagName: `v${pkg.packageJson.version}`,
+            assets: githubReleaseAssets,
           });
         }
         break;
