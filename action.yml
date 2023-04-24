@@ -29,7 +29,7 @@ inputs:
     required: false
     default: true
   githubReleaseAssets:
-    description: "A multiline list of paths to assets to be uploaded to the GitHub release notes"
+    description: "A multiline list of glob paths to assets to be uploaded to the GitHub release notes"
     required: false
 outputs:
   published:

@@ -36,6 +36,7 @@
     "@types/semver": "^6.0.2",
     "babel-jest": "^24.9.0",
     "fs-extra": "^8.1.0",
+    "glob": "^10.2.2",
     "husky": "^3.0.3",
     "jest": "^24.9.0",
     "mdast-util-to-string": "^1.0.6",

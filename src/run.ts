@@ -15,6 +15,7 @@ import {
 import * as gitUtils from "./gitUtils";
 import readChangesetState from "./readChangesetState";
 import resolveFrom from "resolve-from";
+import { glob } from "glob";
 
 // GitHub Issues/PRs messages have a max size limit on the
 // message body payload.
@@ -48,20 +49,18 @@ const createRelease = async (
       ...github.context.repo,
     });
 
-    for (const asset of assets) {
-      const exists = await fs.pathExists(asset);
-      if (!exists) {
-        // the release is already created so we dont want to throw (or do we?)
-        console.warn(`Asset at path ${asset} does not exist. Skipping...`);
-        continue;
+    for (const pattern of assets) {
+      const assets = await glob(pattern);
+      console.log(`Pattern ${pattern} matched the following assets: ${assets}`);
+      for (const asset of assets) {
+        await octokit.repos.uploadReleaseAsset({
+          release_id: release.data.id,
+          name: path.basename(asset),
+          // @ts-expect-error buffer is also accepted?
+          data: await fs.readFile(asset),
+          ...github.context.repo,
+        });
       }
-      await octokit.repos.uploadReleaseAsset({
-        release_id: release.data.id,
-        name: path.basename(asset),
-        // @ts-expect-error buffer is also accepted?
-        data: await fs.readFile(asset),
-        ...github.context.repo,
-      });
     }
   } catch (err: any) {
     // if we can't find a changelog, the user has probably disabled changelogs
