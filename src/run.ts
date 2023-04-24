@@ -55,12 +55,11 @@ const createRelease = async (
         console.warn(`Asset at path ${asset} does not exist. Skipping...`);
         continue;
       }
-      const file = await fs.readFile(asset);
       await octokit.repos.uploadReleaseAsset({
         release_id: release.data.id,
         name: path.basename(asset),
-        // TODO: stringifying the buffer of big files will consume a lot of memory - problem?
-        data: file.toString(),
+        // @ts-expect-error buffer is also accepted?
+        data: await fs.readFile(asset),
         ...github.context.repo,
       });
     }
