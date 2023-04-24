@@ -207,6 +207,7 @@ type GetMessageOptions = {
   }[];
   prBodyMaxCharacters: number;
   preState?: PreState;
+  githubReleaseAssets: string[];
 };
 
 export async function getVersionPrBody({
@@ -215,6 +216,7 @@ export async function getVersionPrBody({
   changedPackagesInfo,
   prBodyMaxCharacters,
   branch,
+  githubReleaseAssets,
 }: GetMessageOptions) {
   let messageHeader = `This PR was opened by the [Changesets release](https://github.com/changesets/action) GitHub action. When you're ready to do a release, you can merge this and ${
     hasPublishScript
@@ -262,6 +264,15 @@ export async function getVersionPrBody({
     ].join("\n");
   }
 
+  // Append the assets that are to be uploaded to the GitHub release
+  if (githubReleaseAssets.length) {
+    fullMessage += "\n";
+    fullMessage += "# GitHub Release Assets\n";
+    for (const asset of githubReleaseAssets) {
+      fullMessage += "1. `" + asset + "`\n";
+    }
+  }
+
   return fullMessage;
 }
 
@@ -273,6 +284,7 @@ type VersionOptions = {
   commitMessage?: string;
   hasPublishScript?: boolean;
   prBodyMaxCharacters?: number;
+  githubReleaseAssets: string[];
 };
 
 type RunVersionResult = {
@@ -287,6 +299,7 @@ export async function runVersion({
   commitMessage = "Version Packages",
   hasPublishScript = false,
   prBodyMaxCharacters = MAX_CHARACTERS_PER_MESSAGE,
+  githubReleaseAssets,
 }: VersionOptions): Promise<RunVersionResult> {
   let repo = `${github.context.repo.owner}/${github.context.repo.repo}`;
   let branch = github.context.ref.replace("refs/heads/", "");
@@ -359,6 +372,7 @@ export async function runVersion({
     branch,
     changedPackagesInfo,
     prBodyMaxCharacters,
+    githubReleaseAssets,
   });
 
   if (searchResult.data.items.length === 0) {
