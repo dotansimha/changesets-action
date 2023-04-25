@@ -205,7 +205,7 @@ type GetMessageOptions = {
   }[];
   prBodyMaxCharacters: number;
   preState?: PreState;
-  githubReleaseAssets: string[];
+  githubReleaseAssets?: string[];
 };
 
 export async function getVersionPrBody({
@@ -263,7 +263,7 @@ export async function getVersionPrBody({
   }
 
   // Append the assets that are to be uploaded to the GitHub release
-  if (githubReleaseAssets.length) {
+  if (githubReleaseAssets?.length) {
     fullMessage += "\n";
     fullMessage += "# GitHub Release Assets\n";
     for (const asset of githubReleaseAssets) {
@@ -282,7 +282,7 @@ type VersionOptions = {
   commitMessage?: string;
   hasPublishScript?: boolean;
   prBodyMaxCharacters?: number;
-  githubReleaseAssets: string[];
+  githubReleaseAssets?: string[];
 };
 
 type RunVersionResult = {
