@@ -275,4 +275,56 @@ fluminis divesque vulnere aquis parce lapsis rabie si visa fulmineis.
       /All release information have been omitted from this message, as the content exceeds the size limit/
     );
   });
+
+  it("should include provided assets in github release notes", async () => {
+    let cwd = f.copy("simple-project");
+    linkNodeModules(cwd);
+
+    mockedGithubMethods.search.issuesAndPullRequests.mockImplementationOnce(
+      () => ({ data: { items: [] } })
+    );
+
+    mockedGithubMethods.pulls.create.mockImplementationOnce(() => ({
+      data: { number: 123 },
+    }));
+
+    await writeChangesets(
+      [
+        {
+          releases: [
+            {
+              name: "simple-project-pkg-c",
+              type: "minor",
+            },
+          ],
+          summary: "I have assets",
+        },
+      ],
+      cwd
+    );
+
+    await runVersion({
+      githubToken: "@@GITHUB_TOKEN",
+      githubReleaseAssets: ["packages/pkg-c/*.ts"],
+      cwd,
+    });
+
+    expect(mockedGithubMethods.pulls.create.mock.calls[0][0].body)
+      .toMatchInlineSnapshot(`
+      "This PR was opened by the [Changesets release](https://github.com/changesets/action) GitHub action. When you're ready to do a release, you can merge this and publish to npm yourself or [setup this action to publish automatically](https://github.com/changesets/action#with-publishing). If you're not ready to do a release yet, that's fine, whenever you add more changesets to some-branch, this PR will be updated.
+
+
+      # Releases
+      ## simple-project-pkg-c@1.1.0
+
+      ### Minor Changes
+
+      -   I have assets
+
+      # GitHub Release Assets
+
+      1. \`packages/pkg-c/*.ts\`
+      "
+    `);
+  });
 });

@@ -265,7 +265,7 @@ export async function getVersionPrBody({
   // Append the assets that are to be uploaded to the GitHub release
   if (githubReleaseAssets?.length) {
     fullMessage += "\n";
-    fullMessage += "# GitHub Release Assets\n";
+    fullMessage += "# GitHub Release Assets\n\n";
     for (const asset of githubReleaseAssets) {
       fullMessage += "1. `" + asset + "`\n";
     }
