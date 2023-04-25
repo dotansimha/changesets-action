@@ -56,7 +56,7 @@ const createRelease = async (
         await octokit.repos.uploadReleaseAsset({
           release_id: release.data.id,
           name: path.basename(asset),
-          // @ts-expect-error buffer is also accepted?
+          // @ts-expect-error buffer is also accepted even though incorrectly typed
           data: await fs.readFile(asset),
           ...github.context.repo,
         });
