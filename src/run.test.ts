@@ -387,6 +387,42 @@ describe("publish", () => {
     );
   });
 
+  it("should create a github release for a single (root) package by default", async () => {
+    let cwd = f.copy("simple-single-package-published");
+    linkNodeModules(cwd);
+
+    // Fake a publish command result
+    mockedExecResponse = {
+      exitCode: 0,
+      stderr: "",
+      stdout: [`🦋  New tag:  v1.0.0`].join("\n"),
+    };
+
+    // Fake a CHANGELOG.md files
+
+    const response = await runPublish({
+      githubToken: "@@GITHUB_TOKEN",
+      createGithubReleases: true,
+      script: "npm run release",
+      githubReleaseAssets: [],
+      cwd,
+    });
+
+    expect(response.published).toBeTruthy();
+    response.published && expect(response.publishedPackages.length).toBe(1);
+
+    expect(mockedGithubMethods.repos.createRelease.mock.calls.length).toBe(1);
+    expect(mockedGithubMethods.repos.createRelease.mock.calls[0][0].name).toBe(
+      "v1.0.0"
+    );
+    expect(mockedGithubMethods.repos.createRelease.mock.calls[0][0].body).toBe(
+      `### Patch Changes
+
+-   259a9e8: fixed critical bug
+`
+    );
+  });
+
   it("should create an aggregated github release when createGithubReleases: aggreate is set", async () => {
     let cwd = f.copy("simple-project-published");
     linkNodeModules(cwd);
